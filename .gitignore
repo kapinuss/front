@@ -1,0 +1,6 @@
+*.class
+*.log
+/.idea/
+/target/
+/project/
+/src/main/resources/local.conf

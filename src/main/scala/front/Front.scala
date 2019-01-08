@@ -1,4 +1,4 @@
-package vio
+package front
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -6,12 +6,10 @@ import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Sink
-import vio.utils.Settings.settings
+import front.utils.Settings.settings
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
 object Front extends App {
-
-  println(settings.titles)
 
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: ActorMaterializer = ActorMaterializer()
@@ -23,17 +21,21 @@ object Front extends App {
     case HttpRequest(GET, Uri.Path("/"), _, _, _) =>
       HttpResponse(entity = HttpEntity(
         ContentTypes.`text/html(UTF-8)`,
-        "<html><body>Hello world!</body></html>"))
+        s"<html><body>${settings.titles(0)}</body></html>"))
 
-    case HttpRequest(GET, Uri.Path("/ping"), _, _, _) =>
-      HttpResponse(entity = "PONG!")
+    case HttpRequest(GET, Uri.Path("/about"), _, _, _) =>
+      HttpResponse(entity = HttpEntity(
+        ContentTypes.`text/html(UTF-8)`,
+        s"<html><body>${settings.titles(1)}</body></html>"))
 
-    case HttpRequest(GET, Uri.Path("/crash"), _, _, _) =>
-      sys.error("BOOM!")
+    case HttpRequest(GET, Uri.Path("/contacts"), _, _, _) =>
+      HttpResponse(entity = HttpEntity(
+        ContentTypes.`text/html(UTF-8)`,
+        s"<html><body>${settings.titles(2)}</body></html>"))
 
     case r: HttpRequest =>
-      r.discardEntityBytes() // important to drain incoming HTTP Entity stream
-      HttpResponse(404, entity = "Unknown resource!")
+      r.discardEntityBytes()
+      HttpResponse(404, entity = "")
   }
 
   val bindingFuture: Future[Http.ServerBinding] =
