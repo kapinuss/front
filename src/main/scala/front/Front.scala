@@ -6,7 +6,8 @@ import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Sink
-import front.utils.Settings.settings
+import front.utils.Settings.{settings, content}
+
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
 object Front extends App {
@@ -19,9 +20,7 @@ object Front extends App {
 
   val requestHandler: HttpRequest => HttpResponse = {
     case HttpRequest(GET, Uri.Path("/"), _, _, _) =>
-      HttpResponse(entity = HttpEntity(
-        ContentTypes.`text/html(UTF-8)`,
-        s"<html><body>${settings.titles(0)}</body></html>"))
+      HttpResponse(entity = HttpEntity(ContentTypes.`text/html(UTF-8)`, content.getOrElse(settings.titles.head, "")))
 
     case HttpRequest(GET, Uri.Path("/about"), _, _, _) =>
       HttpResponse(entity = HttpEntity(
