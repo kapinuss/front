@@ -1,4 +1,4 @@
-name := "site"
+name := "front"
 organization := "ru.kapinuss"
 version := "0.1"
 scalaVersion := "2.12.8"
@@ -13,6 +13,12 @@ libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   "com.iheart" %% "ficus" % "1.4.2"
 )
+
+enablePlugins(ScalaJSPlugin)
+scalaJSUseMainModuleInitializer := true
+
+assemblyJarName in assembly := "front.jar"
+mainClass in assembly := Some("ru.kapinus.Front")
 
 resolvers ++= Seq("Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/",
   "SonaType" at "https://oss.sonatype.org/content/groups/public",
