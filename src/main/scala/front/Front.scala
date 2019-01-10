@@ -3,8 +3,10 @@ package front
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.HttpCookie
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
+
 import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
 import front.utils.Settings.settings
@@ -15,9 +17,16 @@ object Front extends App {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
+  var counter: Int = 0
+
+  def c = {
+    counter += 1
+    setCookie(HttpCookie("counter", value = counter.toString))
+  } & deleteCookie("userName")
+
   val route =
     get {
-      pathEndOrSingleSlash {
+      (pathEndOrSingleSlash & c) {
         complete(HttpEntity(ContentTypes.`text/html(UTF-8)`,
           s"<html><body>index: {${System.currentTimeMillis()}}</body></html>"))
       } ~
