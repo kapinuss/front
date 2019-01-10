@@ -2,13 +2,12 @@ package front
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Sink
-import front.utils.Settings.{settings, content}
-
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.ExecutionContextExecutor
+import scala.io.StdIn
+import front.utils.Settings.settings
 
 object Front extends App {
 
@@ -16,29 +15,30 @@ object Front extends App {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-  val serverSource = Http().bind(interface = "0.0.0.0", port = settings.port)
+  val route =
+    get {
+      pathEndOrSingleSlash {
+        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`,
+          s"<html><body>index: {${System.currentTimeMillis()}}</body></html>"))
+      } ~
+        pathPrefix("chapter" / IntNumber) { chapter =>
+          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`,
+            s"<html><body>chapter: $chapter, {${System.currentTimeMillis()}}</body></html>"))
+        } ~
+        pathPrefix("article" / IntNumber) { article =>
+          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`,
+            s"<html><body>article: $article {${System.currentTimeMillis()}}</body></html>"))
+        }
+    } ~
+      post {
+        pathEndOrSingleSlash {
+          complete(HttpEntity(ContentTypes.`application/json`,
+            """{"test":"test"}"""))
+        }
+      }
 
-  val requestHandler: HttpRequest => HttpResponse = {
-    case HttpRequest(GET, Uri.Path("/"), _, _, _) =>
-      HttpResponse(entity = HttpEntity(ContentTypes.`text/html(UTF-8)`, content.getOrElse(settings.titles.head, "")))
+  val bindingFuture = Http().bindAndHandle(route, "0.0.0.0", port = settings.port)
 
-    case HttpRequest(GET, Uri.Path("/about"), _, _, _) =>
-      HttpResponse(entity = HttpEntity(
-        ContentTypes.`text/html(UTF-8)`,
-        s"<html><body>${settings.titles(1)}</body></html>"))
-
-    case HttpRequest(GET, Uri.Path("/contacts"), _, _, _) =>
-      HttpResponse(entity = HttpEntity(
-        ContentTypes.`text/html(UTF-8)`,
-        s"<html><body>${settings.titles(2)}</body></html>"))
-
-    case r: HttpRequest =>
-      r.discardEntityBytes()
-      HttpResponse(404, entity = "")
-  }
-
-  val bindingFuture: Future[Http.ServerBinding] =
-    serverSource.to(Sink.foreach { connection =>
-      connection handleWithSyncHandler requestHandler
-    }).run()
+  StdIn.readLine()
+  bindingFuture.flatMap(_.unbind()).onComplete(_ => system.terminate())
 }

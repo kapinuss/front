@@ -14,9 +14,6 @@ libraryDependencies ++= Seq(
   "com.iheart" %% "ficus" % "1.4.2"
 )
 
-enablePlugins(ScalaJSPlugin)
-scalaJSUseMainModuleInitializer := true
-
 assemblyJarName in assembly := "front.jar"
 mainClass in assembly := Some("ru.kapinus.Front")
 
